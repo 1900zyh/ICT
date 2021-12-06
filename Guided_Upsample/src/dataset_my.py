@@ -14,15 +14,23 @@ from skimage.color import rgb2gray, gray2rgb
 from .utils import create_mask
 from .degradation import prior_degradation, prior_degradation_2
 from random import randrange
+from glob import glob 
+from zipfile import ZipFile 
 
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, config, flist, edge_flist, mask_flist, augment=True, training=True):
         super(Dataset, self).__init__()
         self.augment = augment
         self.training = training
-        self.data = self.load_flist(flist)
-        self.edge_data = self.load_flist(edge_flist)
-        self.mask_data = self.load_flist(mask_flist)
+
+        self.data = sorted(glob(os.path.join(flist, '*.*')))
+        self.edge_data = sorted(glob(os.path.join(edge_flist, '*.*')))
+        self.mask_data = [f'pconv/{str(2000 * config.level + i).zfill(5)}.png' for i in range(2000)]
+        self.mask_data = self.mask_data * int(len(self.data) / len(self.mask_data) + 1)
+
+        # self.data = self.load_flist(flist)
+        # self.edge_data = self.load_flist(edge_flist)
+        # self.mask_data = self.load_flist(mask_flist)
 
 
         if not training:  ## During testing, load the transformer prior
@@ -162,20 +170,26 @@ class Dataset(torch.utils.data.Dataset):
         if mask_type == 3:
             mask_index = random.randint(0, len(self.mask_data) - 1)
             # mask = imread(self.mask_data[mask_index])
-
             mask = Image.open(self.mask_data[mask_index]).convert("RGB")
             mask = np.array(mask)
 
-            # print(mask.shape)
             mask = self.resize(mask, imgh, imgw)
             mask = (mask > 0).astype(np.uint8) * 255       # threshold due to interpolation
+
             return mask
 
         # test mode: load mask non random
         if mask_type == 6:
             # mask = imread(self.mask_data[index])
-            mask = Image.open(self.mask_data[index]).convert("RGB")
+            # mask = Image.open(self.mask_data[index]).convert("RGB")
+            # mask = np.array(mask)
+
+            # @1900zyh
+            mask = ZipFile(self.mask_list).read(self.mask_data[index])
+            mask = Image.open(io.BytesIO(mask)).convert('RGB')
             mask = np.array(mask)
+            print('mask shape:', mask.shape)
+
             mask = self.resize(mask, imgh, imgw, centerCrop=False)
             mask = (mask > 0).astype(np.uint8) * 255
             return mask

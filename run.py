@@ -14,6 +14,7 @@ def run_cmd(command):
 if __name__=='__main__':
 
     parser = argparse.ArgumentParser()
+    parser.add_argument("--level", type=int, required=True)
     parser.add_argument("--input_image",type=str,default='./',help='The test input image path')
     parser.add_argument("--input_mask",type=str,default='./',help='The test input mask path')
     parser.add_argument("--sample_num",type=int,default=10,help='# of completion results')
@@ -55,7 +56,8 @@ if __name__=='__main__':
                                 --save_url " + prior_url + " \
                                 --image_size 48 --n_samples " + str(opts.sample_num)
     elif opts.Places2_Nature:
-        stage_1_command = "CUDA_VISIBLE_DEVICES=0 python inference.py --ckpt_path ../ckpts_ICT/Transformer/Places2_Nature.pth \
+        stage_1_command = "CUDA_VISIBLE_DEVICES=0 python inference.py \
+                                --ckpt_path ../ckpts_ICT/Transformer/Places2_Nature.pth \
                                 --BERT --image_url " + opts.input_image + " \
                                 --mask_url " + opts.input_mask + " \
                                 --n_layer 35 --n_embd 512 --n_head 8 --top_k 40 --GELU_2 \
@@ -65,8 +67,8 @@ if __name__=='__main__':
         print("ERROR: Please use right checkpoints.")
         sys.exit(1)
 
-    
-    run_cmd(stage_1_command)
+    stage_1_command += f" --level {opts.level} "
+    # run_cmd(stage_1_command)
 
     print("Finish the Stage 1 - Appearance Priors Reconstruction using Transformer")
 
@@ -87,7 +89,8 @@ if __name__=='__main__':
                                         --checkpoints ../ckpts_ICT/Upsample/FFHQ \
                                         --test_batch_size " + test_batch_size+ " --model 2 --Generator 4 --condition_num " + str(opts.sample_num) +  suffix_opt
     elif opts.Places2_Nature:
-        stage_2_command = "CUDA_VISIBLE_DEVICES=0 python test.py --input " + opts.input_image + " \
+        stage_2_command = "CUDA_VISIBLE_DEVICES=0 python test.py \
+                                        --input " + opts.input_image + " \
                                         --mask " + opts.input_mask + " \
                                         --prior " + prior_url + " \
                                         --output " + opts.save_place + " \
@@ -97,6 +100,7 @@ if __name__=='__main__':
         print("ERROR: Please use right checkpoints.")
         sys.exit(1)
 
+    stage_2_command += f' --level {opts.level} '
     run_cmd(stage_2_command)
 
     print("Finish the Stage 2 - Guided Upsampling")

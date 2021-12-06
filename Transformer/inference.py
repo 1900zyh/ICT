@@ -13,12 +13,15 @@ from utils.util import sample_mask,sample_mask_all
 from tqdm import tqdm
 from PIL import Image
 import os
+import io 
+from zipfile import ZipFile 
 import time
 
 if __name__=='__main__':
 
 
     parser=argparse.ArgumentParser()
+    parser.add_argument('--level',type=int, default=0)
     parser.add_argument('--GPU_ids',type=str,default='0')
     parser.add_argument('--ckpt_path',type=str,default='./ckpt')
     parser.add_argument('--BERT',action='store_true', help='BERT model, Image Completion')
@@ -75,8 +78,11 @@ if __name__=='__main__':
     n_samples=opts.n_samples
 
     img_list=sorted(os.listdir(opts.image_url))
-    mask_list=sorted(os.listdir(opts.mask_url))
-    # mask_list=mask_list[-len(img_list):]
+    # mask_list=sorted(os.listdir(opts.mask_url))
+    # mask reading from pconv.zip 
+    mask_list = [f'pconv/{str(2000 * opts.level + i).zfill(5)}.png' for i in range(2000)]
+    mask_list = mask_list * int(len(img_list) / len(mask_list) + 1)
+    
     if opts.skip_number>0:
         img_list=img_list[opts.skip_number-1:]
         mask_list=mask_list[opts.skip_number-1:]
@@ -87,8 +93,8 @@ if __name__=='__main__':
 
         for x_name,y_name in zip(img_list,mask_list):
 
-            if x_name!=y_name:
-                print("### Something Wrong ###")
+            # if x_name!=y_name:
+            #     print("### Something Wrong ###")
 
             image_url=os.path.join(opts.image_url,x_name)
             input_image=Image.open(image_url).convert("RGB")
@@ -97,8 +103,12 @@ if __name__=='__main__':
             x = x.float()
             a = ((x[:, None, :] - C[None, :, :])**2).sum(-1).argmin(1) # cluster assignments
 
-            mask_url=os.path.join(opts.mask_url,y_name)
-            input_mask=Image.open(mask_url).convert("L")
+            # mask_url=os.path.join(opts.mask_url,y_name)
+            # input_mask=Image.open(mask_url).convert("L")
+            input_mask = ZipFile(opts.mask_url).read(y_name)
+            input_mask = Image.open(io.BytesIO(input_mask)).convert('L')
+
+
             y = input_mask.resize((opts.image_size,opts.image_size),resample=Image.NEAREST)
             y = torch.from_numpy(np.array(y)/255.).view(-1)
             y = y>0.5
@@ -117,7 +127,6 @@ if __name__=='__main__':
 
             img_name=x_name[:-4]+'.png'
             for i in range(n_samples):
-
                 current_url=os.path.join(opts.save_url,'condition_%d'%(i+1))
                 os.makedirs(current_url,exist_ok=True)
                 current_img=C[pixels[i]].view(opts.image_size, opts.image_size, 3).numpy().astype(np.uint8)
