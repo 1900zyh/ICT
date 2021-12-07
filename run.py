@@ -17,6 +17,7 @@ if __name__=='__main__':
     parser.add_argument("--level", type=int, required=True)
     parser.add_argument("--split", type=int, required=True)
     parser.add_argument("--total", type=int, required=True)
+    parser.add_argument("--ckpt_path", type=str, default='../ckpts_ICT')
     parser.add_argument("--input_image",type=str,default='./',help='The test input image path')
     parser.add_argument("--input_mask",type=str,default='./',help='The test input mask path')
     parser.add_argument("--sample_num",type=int,default=1,help='# of completion results')
@@ -45,14 +46,14 @@ if __name__=='__main__':
         test_batch_size = str(1)
 
     if opts.ImageNet:
-        stage_1_command = "CUDA_VISIBLE_DEVICES=0 python inference.py --ckpt_path ../ckpts_ICT/Transformer/ImageNet.pth \
+        stage_1_command = "CUDA_VISIBLE_DEVICES=0 python inference.py --ckpt_path " + os.path.join(opts.ckpt_path, 'Transformer/ImageNet.pth') + " \
                                 --BERT --image_url " + opts.input_image + " \
                                 --mask_url " + opts.input_mask + " \
                                 --n_layer 35 --n_embd 1024 --n_head 8 --top_k 40 --GELU_2 \
                                 --save_url " + prior_url + " \
                                 --image_size 32 --n_samples " + str(opts.sample_num)
     elif opts.FFHQ:
-        stage_1_command = "CUDA_VISIBLE_DEVICES=0 python inference.py --ckpt_path ../ckpts_ICT/Transformer/FFHQ.pth \
+        stage_1_command = "CUDA_VISIBLE_DEVICES=0 python inference.py --ckpt_path " + os.path.join(opts.ckpt_path, 'Transformer/FFHQ.pth') + " \
                                 --BERT --image_url " + opts.input_image + " \
                                 --mask_url " + opts.input_mask + " \
                                 --n_layer 30 --n_embd 512 --n_head 8 --top_k 40 --GELU_2 \
@@ -60,7 +61,7 @@ if __name__=='__main__':
                                 --image_size 48 --n_samples " + str(opts.sample_num)
     elif opts.Places2_Nature:
         stage_1_command = "CUDA_VISIBLE_DEVICES=0 python inference.py \
-                                --ckpt_path ../ckpts_ICT/Transformer/Places2_Nature.pth \
+                                --ckpt_path " + os.path.join(opts.ckpt_path, 'Transformer/Places2_Nature.pth') + " \
                                 --BERT --image_url " + opts.input_image + " \
                                 --mask_url " + opts.input_mask + " \
                                 --n_layer 35 --n_embd 512 --n_head 8 --top_k 40 --GELU_2 \
@@ -83,7 +84,7 @@ if __name__=='__main__':
                                         --mask " + opts.input_mask + " \
                                         --prior " + prior_url + " \
                                         --output " + opts.save_place + " \
-                                        --checkpoints ../ckpts_ICT/Upsample/ImageNet \
+                                        --checkpoints " + os.path.join(opts.ckpt_path, 'Upsample/ImageNet') + " \
                                         --test_batch_size " + test_batch_size + " --model 2 --Generator 4 --condition_num " + str(opts.sample_num) +  suffix_opt
     elif opts.FFHQ:
         stage_2_command = "CUDA_VISIBLE_DEVICES=0 python test.py \
@@ -91,7 +92,7 @@ if __name__=='__main__':
                                         --mask " + opts.input_mask + " \
                                         --prior " + prior_url + " \
                                         --output " + opts.save_place + " \
-                                        --checkpoints ../ckpts_ICT/Upsample/FFHQ \
+                                        --checkpoints " + os.path.join(opts.ckpt_path, 'Upsample/FFHQ') + " \
                                         --test_batch_size " + test_batch_size+ " --model 2 --Generator 4 --condition_num " + str(opts.sample_num) +  suffix_opt
     elif opts.Places2_Nature:
         stage_2_command = "CUDA_VISIBLE_DEVICES=0 python test.py \
@@ -100,7 +101,7 @@ if __name__=='__main__':
                                         --mask " + opts.input_mask + " \
                                         --prior " + prior_url + " \
                                         --output " + opts.save_place + " \
-                                        --checkpoints ../ckpts_ICT/Upsample/Places2_Nature \
+                                        --checkpoints" + os.path.join(opts.ckpt_path, 'Upsample/Places2_Nature') + " \
                                         --test_batch_size " + test_batch_size + " --model 2 --Generator 4 --condition_num " + str(opts.sample_num) +  suffix_opt
     else:
         print("ERROR: Please use right checkpoints.")
