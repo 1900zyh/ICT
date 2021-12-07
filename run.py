@@ -29,9 +29,9 @@ if __name__=='__main__':
     ### Stage1: Reconstruction of Appearance Priors using Transformer
 
     prior_url=os.path.join(opts.save_place,"AP")
-    if os.path.exists(prior_url):
-        print("Please change the save path")
-        sys.exit(1)
+    # if os.path.exists(prior_url):
+    #     print("Please change the save path")
+    #     sys.exit(1)
     os.chdir("./Transformer")
 
     if opts.visualize_all:

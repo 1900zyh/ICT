@@ -129,7 +129,7 @@ def load_config(mode=None):
     elif mode == 2:
         config.MODE = 2
         config.MODEL = args.model if args.model is not None else 3
-        config.INPUT_SIZE = 256
+        config.INPUT_SIZE = 512
 
         if args.input is not None:
             config.TEST_FLIST = args.input

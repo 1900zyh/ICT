@@ -7,6 +7,7 @@ from .models import  InpaintingModel
 from .utils import Progbar, create_dir, stitch_images, imsave
 from .metrics import PSNR
 import torchvision.utils as vutils
+from tqdm import tqdm 
 
 class Guided_Upsampler():
     def __init__(self, config):
@@ -103,9 +104,6 @@ class Guided_Upsampler():
                     # self.inpaint_model.backward(gen_loss, dis_loss)
                     iteration = self.inpaint_model.iteration
 
-
-
-
                 if iteration >= max_iteration:
                     keep_training = False
                     break
@@ -196,11 +194,9 @@ class Guided_Upsampler():
         )
 
         index = 0
-        for items in test_loader:
+        for items in tqdm(test_loader, total=len(test_loader)):
 
             name = self.test_dataset.load_name(index)
-            
-            print(name)
             
             if self.config.same_face:
                 path = os.path.join(self.results_path, name)
@@ -208,6 +204,7 @@ class Guided_Upsampler():
                 path = os.path.join(self.results_path, name[:-4]+"_%d"%(index%self.config.condition_num)+'.png')
 
             images, edges, masks = self.cuda(*items)
+            images = images * (1.0 - masks)
             index += self.config.test_batch_size
 
             # inpaint model
@@ -225,7 +222,6 @@ class Guided_Upsampler():
                 print(index, name)
             else:
                 output = self.postprocess(outputs_merged)[0]
-                print(index, name)
                 imsave(output, path)
 
             if self.debug:

@@ -67,7 +67,7 @@ def sample_new(model, context, length, num_sample=1, temperature=1.0, top_k=None
     pad = torch.zeros(num_sample, 1, dtype=torch.long).cuda()  # to pad prev output
     model.eval()
     with torch.no_grad():
-        for i in tqdm(range(length), leave=False):
+        for i in range(length):
             
             if i<counter:
                 continue
@@ -95,11 +95,12 @@ def sample_mask(model, context, length, num_sample=1, temperature=1.0, top_k=Non
     model.eval()
     with torch.no_grad():
 
-        if no_bar:
-            looper=range(length)
-        else:
-            looper=tqdm(range(length), leave=False)
-        for i in looper:
+        # if no_bar:
+        #     looper=range(length)
+        # else:
+        #     looper=tqdm(range(length), leave=False)
+        # for i in looper:
+        for i in range(length):
 
             if mask[0,i] == 0:
                 continue
@@ -127,11 +128,13 @@ def sample_mask_all(model, context, length, num_sample=1, temperature=1.0, top_k
 
         logits,_ = model(output,masks=mask)
 
-        if no_bar:
-            looper=range(length)
-        else:
-            looper=tqdm(range(length), leave=False)
-        for i in looper:
+        # if no_bar:
+        #     looper=range(length)
+        # else:
+        #     looper=tqdm(range(length), leave=False)
+        # for i in looper:
+
+        for i in range(length):
 
             if mask[0,i] == 0:
                 continue

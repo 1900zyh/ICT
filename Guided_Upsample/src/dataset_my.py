@@ -16,6 +16,7 @@ from .degradation import prior_degradation, prior_degradation_2
 from random import randrange
 from glob import glob 
 from zipfile import ZipFile 
+import io 
 
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, config, flist, edge_flist, mask_flist, augment=True, training=True):
@@ -25,6 +26,7 @@ class Dataset(torch.utils.data.Dataset):
 
         self.data = sorted(glob(os.path.join(flist, '*.*')))
         self.edge_data = sorted(glob(os.path.join(edge_flist, '*.*')))
+        self.mask_list = mask_flist
         self.mask_data = [f'pconv/{str(2000 * config.level + i).zfill(5)}.png' for i in range(2000)]
         self.mask_data = self.mask_data * int(len(self.data) / len(self.mask_data) + 1)
 
@@ -42,7 +44,7 @@ class Dataset(torch.utils.data.Dataset):
                     temp='condition_%d/%s'%(j+1,os.path.basename(x))
                     all_data.append(x)
                     all_mask_data.append(self.mask_data[i])
-                    all_edge_data.append(os.path.join(edge_flist,temp))
+                    all_edge_data.append(os.path.join(edge_flist,temp.replace('.jpg', '.png')))
             self.data=all_data
             self.edge_data=all_edge_data
             self.mask_data=all_mask_data
@@ -91,9 +93,9 @@ class Dataset(torch.utils.data.Dataset):
         img = Image.open(self.data[index]).convert("RGB")
         img = np.array(img)
 
-        # resize/crop if needed
-        if size != 0:
-            img = self.resize(img, size, size)
+        # # resize/crop if needed
+        # if size != 0:
+        #     img = self.resize(img, size, size)
 
 
         # load mask
@@ -102,15 +104,14 @@ class Dataset(torch.utils.data.Dataset):
         # load edge
         prior = self.load_prior(img, index)
 
-        # augment data
-        if self.augment and np.random.binomial(1, 0.5) > 0:
-            img = img[:, ::-1, ...]
-            prior = prior[:, ::-1, ...]
-
-        if self.augment and np.random.binomial(1, 0.5) > 0:
-            mask = mask[:, ::-1, ...]
-        if self.augment and np.random.binomial(1, 0.5) > 0:
-            mask = mask[::-1, :, ...]
+        # # augment data
+        # if self.augment and np.random.binomial(1, 0.5) > 0:
+        #     img = img[:, ::-1, ...]
+        #     prior = prior[:, ::-1, ...]
+        # if self.augment and np.random.binomial(1, 0.5) > 0:
+        #     mask = mask[:, ::-1, ...]
+        # if self.augment and np.random.binomial(1, 0.5) > 0:
+        #     mask = mask[::-1, :, ...]
 
         return self.to_tensor(img), self.to_tensor(prior), self.to_tensor(mask)
 
@@ -188,9 +189,8 @@ class Dataset(torch.utils.data.Dataset):
             mask = ZipFile(self.mask_list).read(self.mask_data[index])
             mask = Image.open(io.BytesIO(mask)).convert('RGB')
             mask = np.array(mask)
-            print('mask shape:', mask.shape)
 
-            mask = self.resize(mask, imgh, imgw, centerCrop=False)
+            # mask = self.resize(mask, imgh, imgw, centerCrop=False)
             mask = (mask > 0).astype(np.uint8) * 255
             return mask
 

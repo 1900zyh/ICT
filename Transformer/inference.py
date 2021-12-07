@@ -90,24 +90,26 @@ if __name__=='__main__':
 
 
     if opts.BERT:
-
-        for x_name,y_name in zip(img_list,mask_list):
+        os.makedirs(os.path.join(opts.save_url,'masked'), exist_ok=True)
+        for x_name,y_name in tqdm(zip(img_list,mask_list), total=len(img_list)):
 
             # if x_name!=y_name:
             #     print("### Something Wrong ###")
-
-            image_url=os.path.join(opts.image_url,x_name)
-            input_image=Image.open(image_url).convert("RGB")
-            x = input_image.resize((opts.image_size,opts.image_size),resample=Image.BILINEAR)
-            x = torch.from_numpy(np.array(x)).view(-1, 3)
-            x = x.float()
-            a = ((x[:, None, :] - C[None, :, :])**2).sum(-1).argmin(1) # cluster assignments
 
             # mask_url=os.path.join(opts.mask_url,y_name)
             # input_mask=Image.open(mask_url).convert("L")
             input_mask = ZipFile(opts.mask_url).read(y_name)
             input_mask = Image.open(io.BytesIO(input_mask)).convert('L')
+            image_url=os.path.join(opts.image_url,x_name)
+            input_image = Image.open(image_url).convert("RGB")
+            input_image = np.array(input_image) * (1.0 - np.expand_dims(np.array(input_mask), axis=2)/255.0)
+            input_image = Image.fromarray(input_image.astype(np.uint8))
+            input_image.save(os.path.join(opts.save_url,'masked', x_name))
 
+            x = input_image.resize((opts.image_size,opts.image_size),resample=Image.BILINEAR)
+            x = torch.from_numpy(np.array(x)).view(-1, 3)
+            x = x.float()
+            a = ((x[:, None, :] - C[None, :, :])**2).sum(-1).argmin(1) # cluster assignments
 
             y = input_mask.resize((opts.image_size,opts.image_size),resample=Image.NEAREST)
             y = torch.from_numpy(np.array(y)/255.).view(-1)
@@ -132,7 +134,6 @@ if __name__=='__main__':
                 current_img=C[pixels[i]].view(opts.image_size, opts.image_size, 3).numpy().astype(np.uint8)
                 tmp=Image.fromarray(current_img)
                 tmp.save(os.path.join(current_url,img_name))
-            print("Finish %s"%(img_name))
         
         e_time=time.time()
         print("This test totally costs %.5f seconds"%(e_time-s_time))
