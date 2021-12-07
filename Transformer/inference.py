@@ -14,6 +14,7 @@ from tqdm import tqdm
 from PIL import Image
 import os
 import io 
+from cv2 import cv2 
 from zipfile import ZipFile 
 import time
 
@@ -21,7 +22,9 @@ if __name__=='__main__':
 
 
     parser=argparse.ArgumentParser()
+    parser.add_argument('--split',type=int, default=0)
     parser.add_argument('--level',type=int, default=0)
+    parser.add_argument('--total',type=int, default=1)
     parser.add_argument('--GPU_ids',type=str,default='0')
     parser.add_argument('--ckpt_path',type=str,default='./ckpt')
     parser.add_argument('--BERT',action='store_true', help='BERT model, Image Completion')
@@ -82,6 +85,9 @@ if __name__=='__main__':
     # mask reading from pconv.zip 
     mask_list = [f'pconv/{str(2000 * opts.level + i).zfill(5)}.png' for i in range(2000)]
     mask_list = mask_list * int(len(img_list) / len(mask_list) + 1)
+    # set subset 
+    img_list = [img_list[i] for i in range(opts.split, len(img_list), opts.total)]
+    mask_list = [mask_list[i] for i in range(opts.split, len(mask_list), opts.total)]
     
     if opts.skip_number>0:
         img_list=img_list[opts.skip_number-1:]
@@ -111,9 +117,14 @@ if __name__=='__main__':
             x = x.float()
             a = ((x[:, None, :] - C[None, :, :])**2).sum(-1).argmin(1) # cluster assignments
 
-            y = input_mask.resize((opts.image_size,opts.image_size),resample=Image.NEAREST)
+            # dilate mask 
+            input_mask = cv2.dilate(np.array(input_mask), np.ones((21,21), 'uint8'), iterations=1)
+            input_mask[input_mask > 0] = 255 
+            input_mask = Image.fromarray(input_mask.astype(np.uint8)).convert('L')
+            y = input_mask.resize((opts.image_size,opts.image_size), resample=Image.NEAREST)
             y = torch.from_numpy(np.array(y)/255.).view(-1)
-            y = y>0.5
+            # y = y>0.5
+            y = y > 0.1
             y = y.float()
 
             a_list=[a]*n_samples

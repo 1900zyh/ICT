@@ -75,6 +75,8 @@ def load_config(mode=None):
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--level', type=int, default=0)
+    parser.add_argument('--split', type=int, default=0)
+    parser.add_argument('--total',type=int, default=1)
     parser.add_argument('--path', '--checkpoints', type=str, default='./checkpoints', help='model checkpoints path (default: ./checkpoints)')
     parser.add_argument('--model', type=int, choices=[1, 2, 3, 4], help='1: edge model, 2: inpaint model, 3: edge-inpaint model, 4: joint model')
     parser.add_argument('--config_file',type=str,default='./config.yml.example',help='The config file of each experiment ')
@@ -86,6 +88,7 @@ def load_config(mode=None):
 
     # test mode
     if mode == 2:
+        parser.add_argument('--image_url', type=str, help='path to the original image')
         parser.add_argument('--input', type=str, help='path to the input images directory or an input image')
         parser.add_argument('--mask', type=str, help='path to the masks directory or a mask file')
         parser.add_argument('--prior', type=str, help='path to the edges directory or an edge file')
@@ -131,6 +134,9 @@ def load_config(mode=None):
         config.MODEL = args.model if args.model is not None else 3
         config.INPUT_SIZE = 512
 
+        config.image_url = args.image_url
+        config.total = args.total 
+        config.split = args.split 
         if args.input is not None:
             config.TEST_FLIST = args.input
 

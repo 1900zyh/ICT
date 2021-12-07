@@ -23,12 +23,19 @@ class Dataset(torch.utils.data.Dataset):
         super(Dataset, self).__init__()
         self.augment = augment
         self.training = training
-
-        self.data = sorted(glob(os.path.join(flist, '*.*')))
-        self.edge_data = sorted(glob(os.path.join(edge_flist, '*.*')))
         self.mask_list = mask_flist
+
+        self.data = sorted(os.listdir(config.image_url))
         self.mask_data = [f'pconv/{str(2000 * config.level + i).zfill(5)}.png' for i in range(2000)]
         self.mask_data = self.mask_data * int(len(self.data) / len(self.mask_data) + 1)
+        self.data = [self.data[i] for i in range(config.split, len(self.data), config.total)]
+        self.mask_data = [self.mask_data[i] for i in range(config.split, len(self.mask_data), config.total)]
+        self.edge_data = [os.path.join(edge_flist, i) for i in self.data]
+        self.data = [os.path.join(flist, i) for i in self.data]
+
+        # self.data = sorted(glob(os.path.join(flist, '*.*')))
+        # self.edge_data = sorted(glob(os.path.join(edge_flist, '*.*')))
+        # self.mask_list = mask_flist
 
         # self.data = self.load_flist(flist)
         # self.edge_data = self.load_flist(edge_flist)

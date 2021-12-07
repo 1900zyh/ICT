@@ -191,27 +191,22 @@ class Guided_Upsampler():
         test_loader = DataLoader(
             dataset=self.test_dataset,
             batch_size=self.config.test_batch_size,
+            drop_last=False,
+            shuffle=False,
         )
 
-        index = 0
-        for items in tqdm(test_loader, total=len(test_loader)):
+        for index, items in tqdm(enumerate(test_loader), total=len(test_loader)):
 
             name = self.test_dataset.load_name(index)
-            
-            if self.config.same_face:
-                path = os.path.join(self.results_path, name)
-            else:
-                path = os.path.join(self.results_path, name[:-4]+"_%d"%(index%self.config.condition_num)+'.png')
-
+            path = os.path.join(self.results_path, name)
             images, edges, masks = self.cuda(*items)
-            images = images * (1.0 - masks)
-            index += self.config.test_batch_size
+            original_images = images.clone() * (1.0 - masks)
 
             # inpaint model
             if model == 2:
                 outputs = self.inpaint_model(images, edges, masks)
                 if self.config.merge:
-                    outputs_merged = (outputs * masks) + (images * (1 - masks))
+                    outputs_merged = (outputs * masks) + (original_images * (1 - masks))
                 else:
                     outputs_merged = outputs
 
@@ -219,18 +214,17 @@ class Guided_Upsampler():
                 all_tensor=[images,edges,images * (1 - masks),outputs_merged]
                 all_tensor=torch.cat(all_tensor,dim=0)
                 vutils.save_image(all_tensor,path,nrow=self.config.test_batch_size,padding=0,normalize=False)
-                print(index, name)
             else:
                 output = self.postprocess(outputs_merged)[0]
                 imsave(output, path)
+                
+            # if self.debug:
+            #     edges = self.postprocess(1 - edges)[0]
+            #     masked = self.postprocess(images * (1 - masks) + masks)[0]
+            #     fname, fext = name.split('.')
 
-            if self.debug:
-                edges = self.postprocess(1 - edges)[0]
-                masked = self.postprocess(images * (1 - masks) + masks)[0]
-                fname, fext = name.split('.')
-
-                imsave(edges, os.path.join(self.results_path, fname + '_edge.' + fext))
-                imsave(masked, os.path.join(self.results_path, fname + '_masked.' + fext))
+            #     imsave(edges, os.path.join(self.results_path, fname + '_edge.' + fext))
+            #     imsave(masked, os.path.join(self.results_path, fname + '_masked.' + fext))
 
         print('\nEnd test....')
 
