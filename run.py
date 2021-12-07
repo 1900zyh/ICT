@@ -16,12 +16,13 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--level", type=int, required=True)
     parser.add_argument("--split", type=int, required=True)
+    parser.add_argument("--total", type=int, required=True)
     parser.add_argument("--input_image",type=str,default='./',help='The test input image path')
     parser.add_argument("--input_mask",type=str,default='./',help='The test input mask path')
-    parser.add_argument("--sample_num",type=int,default=10,help='# of completion results')
+    parser.add_argument("--sample_num",type=int,default=1,help='# of completion results')
     parser.add_argument("--save_place",type=str,default='./save',help='Please use the absolute path')
     parser.add_argument("--FFHQ",action='store_true',help='FFHQ pretrained model')
-    parser.add_argument("--Places2_Nature",action='store_true',help='Places2_Nature pretrained model')
+    parser.add_argument("--Places2_Nature", default=True, action='store_true',help='Places2_Nature pretrained model')
     parser.add_argument("--ImageNet",action='store_true',help='ImageNet pretrained model')
     parser.add_argument("--visualize_all",action='store_true',help='show the diverse results in one row')
 
@@ -68,7 +69,7 @@ if __name__=='__main__':
         print("ERROR: Please use right checkpoints.")
         sys.exit(1)
 
-    stage_1_command += f" --level {opts.level}  --split {opts.split} --total 64 "
+    stage_1_command += f" --level {opts.level}  --split {opts.split} --total {opts.total} "
 
     run_cmd(stage_1_command)
     print("Finish the Stage 1 - Appearance Priors Reconstruction using Transformer")
@@ -104,7 +105,7 @@ if __name__=='__main__':
         print("ERROR: Please use right checkpoints.")
         sys.exit(1)
 
-    stage_2_command += f" --level {opts.level} --split {opts.split} --total 64 --merge "
+    stage_2_command += f" --level {opts.level} --split {opts.split} --total {opts.total} --merge "
 
     run_cmd(stage_2_command)
     print("Finish the Stage 2 - Guided Upsampling")
