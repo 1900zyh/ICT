@@ -101,7 +101,7 @@ if __name__=='__main__':
                                         --mask " + opts.input_mask + " \
                                         --prior " + prior_url + " \
                                         --output " + opts.save_place + " \
-                                        --checkpoints" + os.path.join(opts.ckpt_path, 'Upsample/Places2_Nature') + " \
+                                        --checkpoints " + os.path.join(opts.ckpt_path, 'Upsample/Places2_Nature') + " \
                                         --test_batch_size " + test_batch_size + " --model 2 --Generator 4 --condition_num " + str(opts.sample_num) +  suffix_opt
     else:
         print("ERROR: Please use right checkpoints.")
