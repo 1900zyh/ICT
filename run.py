@@ -27,6 +27,7 @@ if __name__=='__main__':
     parser.add_argument("--visualize_all",action='store_true',help='show the diverse results in one row')
 
     opts=parser.parse_args()
+    opts.save_place += f"_level0{opts.level}"
 
     ### Stage1: Reconstruction of Appearance Priors using Transformer
 
