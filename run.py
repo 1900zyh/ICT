@@ -73,7 +73,7 @@ if __name__=='__main__':
 
     stage_1_command += f" --level {opts.level}  --split {opts.split} --total {opts.total} "
 
-    run_cmd(stage_1_command)
+    # run_cmd(stage_1_command)
     print("Finish the Stage 1 - Appearance Priors Reconstruction using Transformer")
 
 
